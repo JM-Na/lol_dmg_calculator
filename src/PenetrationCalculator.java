@@ -8,74 +8,60 @@ public class PenetrationCalculator {
         this.defense = defense;
     }
 
-    public void func(){
+    public long func(){
         Long type = offense.getType();
-
+        long actualStat = 3;
         if(type==0L){
-
+            actualStat = calculatePenetrationForMeleeDamage();
         }
         else if (type==1L) {
-            
+            actualStat = calculatePenetrationForMagicDamage();
+        } else if (type == 3L) {
+            actualStat = 0;
         }
-        else if (type==2L) {
-            
-        }
+
+        return actualStat;
+    }
+
+    private long calculatePenetrationForMeleeDamage() {
+        long armor = defense.getArmor();
+        long lethality = offense.getLethality();
+        long[] armorPenetrations = offense.getArmorPenetration();
+        long[] armorReductions = offense.getArmorReduction();
+
+        return calculatePenetration(armor, lethality, armorPenetrations, armorReductions);
     }
 
     private long calculatePenetrationForMagicDamage(){
-        long actualMagicResist;
-        long tempMagicResist;
-
-        int magicResist = defense.getMagicResist();
+        long magicResist = defense.getMagicResist();
         long magicPenetration = offense.getMagicPenetration();
         long[] magicPenetrationPercents = offense.getMagicPenetrationPercent();
         long[] magicResistReductions = offense.getMagicResistReduction();
 
-        // Adapt MagicPenetration
-        tempMagicResist = magicResist - magicPenetration;
-
-        // Adapt MagicPenetrationPercent
-        for (long magicPenetrationPercent : magicPenetrationPercents) {
-            tempMagicResist = tempMagicResist * (1 - magicPenetrationPercent);
-        }
-
-        // Adapt MagicReductions
-        for (long magicResistReduction : magicResistReductions) {
-            tempMagicResist = tempMagicResist * (1 - magicResistReduction);
-        }
-
-        actualMagicResist = tempMagicResist;
-        System.out.println("actualMagicResist = " + actualMagicResist);
-
-        return actualMagicResist;
+        return calculatePenetration(magicResist, magicPenetration, magicPenetrationPercents, magicResistReductions);
     }
 
-    private long calculatePenetrationForMeleeDamage() {
-        long actualArmor;
-        long tempArmor;
+    private long calculatePenetration(long currentStat, long statReductionByValue, long[] statPenetrations,
+                                      long[] statReductionsByPercent) {
+        long actualStat;
+        long tempStat;
 
-        int armor = defense.getArmor();
-        int lethality = offense.getLethality();
-        long[] armorPenetrations = offense.getArmorPenetration();
-        long[] armorReductions = offense.getArmorReduction();
+        // Adapt lethality or magic penetration
+        tempStat = currentStat - statReductionByValue;
 
-        // Adapt Lethality
-        tempArmor = armor - lethality;
-
-        // Adapt ArmorPenetration
-        for (long armorPenetration : armorPenetrations) {
-            tempArmor = tempArmor * (1 - armorPenetration);
+        // Adapt armor penetration or magic penetration(percent)
+        for (long statPenetration : statPenetrations) {
+            tempStat = tempStat * (1 - statPenetration);
         }
 
-        // Adapt ArmorReduction
-        for (long armorReduction : armorReductions) {
-            tempArmor = tempArmor * (1 - armorReduction);
+        // Adapt armor reduction of magic reduction
+        for (long statReduction : statReductionsByPercent) {
+            tempStat = tempStat * (1 - statReduction);
         }
+        actualStat = tempStat;
 
-        actualArmor = tempArmor;
-        System.out.println("actualArmor = " + actualArmor);
+        System.out.println("actualStat = " + actualStat);
 
-        return actualArmor;
+        return actualStat;
     }
-
 }
